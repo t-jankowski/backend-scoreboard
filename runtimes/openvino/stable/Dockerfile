@@ -23,14 +23,13 @@ RUN pip3 install --no-cache-dir -r /root/setup/requirements_report.txt
 ENV ONNX_BACKEND="test_onnx.utils.onnx_backend"
 
 ARG OV_DIST_DIR=/openvino/dist
+ARG OV_REL_TAG=2021.1
 
 RUN apt-get install -y --no-install-recommends build-essential cmake cython3 git wget && \
     apt-get clean autoclean && apt-get autoremove -y
 
 # Build OpenVINO
-# TODO Once mk/scoreboard_twears are merge into upstream do clone from openvino:master - full command in below comment
-# RUN git clone --recurse-submodules --depth 1 https://github.com/openvinotoolkit/openvino.git
-RUN git clone --branch mk/scoreboard_tweaks --recurse-submodules --depth 1 https://github.com/postrational/openvino.git
+RUN git clone --branch ${OV_REL_TAG} --recurse-submodules --depth 1 https://github.com/openvinotoolkit/openvino.git
 WORKDIR /openvino/build
 RUN cmake .. \
     -DENABLE_CLDNN=OFF \
@@ -62,6 +61,8 @@ RUN pip3 install -r requirements.txt
 RUN pip3 install -r requirements_test.txt
 RUN python3 setup.py bdist_wheel
 RUN pip3 install --no-index --pre --find-links=dist/ ngraph-core
+
+ENV PYTHONPATH=/openvino/ngraph/python/tests/test_onnx/utils:/openvino/ngraph/python:${PYTHONPATH}
 ####################################################
 
 CMD . /root/setup/docker-setup.sh && \
