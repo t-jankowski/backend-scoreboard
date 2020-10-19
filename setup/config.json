@@ -21,7 +21,7 @@
         "openvino": {
             "name": "OpenVINO",
             "results_dir": "./results/openvino/stable",
-            "core_packages": ["???"],
+            "core_packages": ["ngraph-core"],
             "dockerfile_link": "runtimes/openvino/stable/Dockerfile"
         }
     },

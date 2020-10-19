@@ -23,13 +23,21 @@ RUN pip3 install --no-cache-dir -r /root/setup/requirements_report.txt
 ENV ONNX_BACKEND="test_onnx.utils.onnx_backend"
 
 ARG OV_DIST_DIR=/openvino/dist
-ARG OV_REL_TAG=2021.1
 
-RUN apt-get install -y --no-install-recommends build-essential cmake cython3 git wget && \
+RUN apt-get install -y --no-install-recommends build-essential cmake curl cython3 git wget && \
     apt-get clean autoclean && apt-get autoremove -y
 
+# Obtain OpenVINO release info
+WORKDIR /openvino.latest
+RUN curl -s https://api.github.com/repos/openvinotoolkit/openvino/releases/latest > latest.json
+RUN cat latest.json | \
+    python3 -c "import sys; import json; latest = json.loads(sys.stdin.read()); print(latest['name'])" > version
+RUN cat latest.json | \
+    python3 -c "import sys; import json; latest = json.loads(sys.stdin.read()); print(latest['tag_name'])" > tag
+WORKDIR /
+
 # Build OpenVINO
-RUN git clone --branch ${OV_REL_TAG} --recurse-submodules --depth 1 https://github.com/openvinotoolkit/openvino.git
+RUN git clone --branch `cat /openvino.latest/tag` --recurse-submodules --depth 1 https://github.com/openvinotoolkit/openvino.git
 WORKDIR /openvino/build
 RUN cmake .. \
     -DENABLE_CLDNN=OFF \
@@ -64,7 +72,7 @@ ENV LD_LIBRARY_PATH=${OV_DIST_DIR}/lib:${LD_LIBRARY_PATH}
 ENV PYTHONPATH=/openvino/bin/intel64/Release/lib/python_api/python3.8:/openvino/ngraph/python/tests:${PYTHONPATH}
 RUN pip3 install -r requirements.txt
 RUN pip3 install -r requirements_test.txt
-RUN python3 setup.py bdist_wheel
+RUN export NGRAPH_VERSION=`cat /openvino.latest/tag` && python3 setup.py bdist_wheel
 RUN pip3 install --no-index --pre --find-links=dist/ ngraph-core
 ####################################################
 
