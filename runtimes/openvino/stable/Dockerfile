@@ -51,8 +51,13 @@ RUN cmake .. \
     -DCMAKE_INSTALL_PREFIX=${OV_DIST_DIR}
 RUN make -j $(nproc) install
 
-# RUN Install ngraph wheel
+# Install ngraph wheel
 WORKDIR /openvino/ngraph/python
+# Below tweaks are applied in openvino:master (https://github.com/openvinotoolkit/openvino/pull/2697)
+# and can be removed once OpenVINO release version also has this change merged in.
+RUN touch tests/test_onnx/__init__.py
+RUN sed -i "s/^typing$/typing; python_version < '3.6'/g" requirements.txt
+# End of tweaks
 RUN git clone --branch v2.5.0 --depth 1 https://github.com/pybind/pybind11.git
 ENV NGRAPH_CPP_BUILD_PATH=${OV_DIST_DIR}
 ENV LD_LIBRARY_PATH=${OV_DIST_DIR}/lib:${LD_LIBRARY_PATH}
@@ -61,8 +66,6 @@ RUN pip3 install -r requirements.txt
 RUN pip3 install -r requirements_test.txt
 RUN python3 setup.py bdist_wheel
 RUN pip3 install --no-index --pre --find-links=dist/ ngraph-core
-
-ENV PYTHONPATH=/openvino/ngraph/python/tests/test_onnx/utils:/openvino/ngraph/python:${PYTHONPATH}
 ####################################################
 
 CMD . /root/setup/docker-setup.sh && \

@@ -28,9 +28,7 @@ RUN apt-get install -y --no-install-recommends build-essential cmake cython3 git
     apt-get clean autoclean && apt-get autoremove -y
 
 # Build OpenVINO
-# TODO Once mk/scoreboard_twears are merge into upstream do clone from openvino:master - full command in below comment
-# RUN git clone --recurse-submodules --depth 1 https://github.com/openvinotoolkit/openvino.git
-RUN git clone --branch mk/scoreboard_tweaks --recurse-submodules --depth 1 https://github.com/postrational/openvino.git
+RUN git clone --recurse-submodules --depth 1 https://github.com/openvinotoolkit/openvino.git
 WORKDIR /openvino/build
 RUN cmake .. \
     -DENABLE_CLDNN=OFF \
@@ -52,7 +50,7 @@ RUN cmake .. \
     -DCMAKE_INSTALL_PREFIX=${OV_DIST_DIR}
 RUN make -j $(nproc) install
 
-# RUN Install ngraph wheel
+# Install ngraph wheel
 WORKDIR /openvino/ngraph/python
 RUN git clone --branch v2.5.0 --depth 1 https://github.com/pybind/pybind11.git
 ENV NGRAPH_CPP_BUILD_PATH=${OV_DIST_DIR}
