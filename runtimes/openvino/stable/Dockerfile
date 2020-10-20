@@ -66,6 +66,11 @@ WORKDIR /openvino/ngraph/python
 RUN touch tests/test_onnx/__init__.py
 RUN sed -i "s/^typing$/typing; python_version < '3.6'/g" requirements.txt
 # End of tweaks
+# Below hack is needed because OpenVINO conftest.py, which sets up backand name variables,
+# is not called while running onnx backend tests.
+RUN sed -i 's/BACKEND_NAME = None/BACKEND_NAME = "CPU"/' /openvino/ngraph/python/tests/__init__.py
+RUN sed -i 's/cls.backend_name/"CPU"/' /openvino/ngraph/python/tests/test_onnx/utils/onnx_backend.py
+# End of hack
 RUN git clone --branch v2.5.0 --depth 1 https://github.com/pybind/pybind11.git
 ENV NGRAPH_CPP_BUILD_PATH=${OV_DIST_DIR}
 ENV LD_LIBRARY_PATH=${OV_DIST_DIR}/lib:${LD_LIBRARY_PATH}
